@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"bufio"
 	"encoding/json"
 	"fmt"
@@ -38,8 +39,8 @@ var optionsGenerate struct {
 }
 
 var optionsEncrypt struct {
-	Keys  string   `short:"k" long:"keys" required:"yes" description:"Path to the keys required for encryption"`
-	Files []string `short:"f" long:"files" required:"yes" description:"File(s) to add to encrypted archive"`
+	Keyfile string `short:"k" long:"keyfile" required:"yes" description:"Path to the keyfile required for encryption"`
+	File    string `short:"f" long:"file" required:"yes" description:"File to encrypt"`
 }
 
 var optionsDecrypt struct {
@@ -80,14 +81,28 @@ func main() {
 			outputPath = absolute
 		}
 
-		fmt.Printf("All keys have been generated\n==================\n\n")
+		fmt.Printf("All keys have been generated\n")
+		fmt.Printf("============================\n\n")
 		fmt.Printf(
 			"The keys have been exported successfuly to:\n%s\n\n",
 			absolute,
 		)
 
 	} else if action == "encrypt" {
-		encrypt()
+		_, err := flags.ParseArgs(&optionsEncrypt, args)
+		if err != nil {
+			panic(err)
+		}
+
+		err = encrypt(
+			optionsEncrypt.Keyfile,
+			optionsEncrypt.File,
+		)
+
+		if err != nil {
+			panic(err)
+		}
+
 	} else if action == "decrypt" {
 		decrypt()
 	} else {
@@ -172,15 +187,27 @@ func generateKeys(min int, total int) string {
 	screenClear()
 	for i, key := range keys {
 		nb := i + 1
+		label := "Secret share number"
+		count := len(label) + len(fmt.Sprint(nb))
 
-		fmt.Printf("Secret key number %d\n======================\n\n", nb)
+		fmt.Printf("%s %d\n", label, nb)
+		for j := 0; j <= count; j++ {
+			fmt.Printf("=")
+		}
+		fmt.Printf("\n\n")
+
 		fmt.Printf("Please make sure secret holder number %d is alone behind this terminal.\n\n", nb)
 		fmt.Printf("> Press [Enter] to continue...")
 		waitForEnter()
 		screenClear()
 
-		fmt.Printf("Secret key number %d\n======================\n\n", nb)
-		fmt.Printf("Key part number %d :\n", nb)
+		fmt.Printf("%s %d\n", label, nb)
+		for j := 0; j <= count; j++ {
+			fmt.Printf("=")
+		}
+		fmt.Printf("\n\n")
+
+		fmt.Printf("Secret key share number %d :\n", nb)
 		fmt.Printf("%s\n\n", key)
 
 		fmt.Printf("Please make sure to save this secret in a secure way.\n\n")
@@ -204,8 +231,89 @@ func generateKeys(min int, total int) string {
 	return string(json)
 }
 
-func encrypt() {
+func encrypt(keyfile string, file string) error {
 
+	if _, err := os.Stat(keyfile); err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(file); err != nil {
+		return err
+	}
+
+	keyfileContent, err := os.ReadFile(keyfile)
+	if err != nil {
+		return err
+	}
+
+	fileContent, err := os.ReadFile(keyfile)
+	if err != nil {
+		return err
+	}
+
+	var keys KeysFile
+	json.Unmarshal(keyfileContent, &keys)
+
+	encryptedFile, err := helper.EncryptAttachmentWithKey(
+		keys.PublicKey,
+		"encrypted-data",
+		fileContent,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	filename := filepath.Base(file)
+
+	currentTime := time.Now()
+	acrhiveName := fmt.Sprintf("./test/encrypted-%d.zip", currentTime.UnixNano())
+
+	archive, err := os.Create(acrhiveName)
+	if err != nil {
+		return err
+	}
+	defer archive.Close()
+
+	// Create a new zip writer
+	wr := zip.NewWriter(archive)
+	defer wr.Close()
+
+	// Add a file to the zip file
+	f1, err := wr.Create("encrypted-file")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Write data to the file
+	_, err = f1.Write(encryptedFile.GetBinary())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	f2, err := wr.Create("filename")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Write data to the file
+	_, err = f2.Write([]byte(filename))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	f3, err := wr.Create("keyfile")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Write data to the file
+	_, err = f3.Write([]byte(keyfileContent))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
 }
 
 func decrypt() {
