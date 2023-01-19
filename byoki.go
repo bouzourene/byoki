@@ -317,12 +317,12 @@ func decrypt() {
 }
 
 func genPassphrase() (string, error) {
-	passphare, err := password.Generate(32, 10, 10, false, false)
+	passphrase, err := password.Generate(32, 10, 10, false, false)
 	if err != nil {
 		return "", err
 	}
 
-	return passphare, nil
+	return passphrase, nil
 }
 
 func writeFileToDisk(path string, content string) error {
