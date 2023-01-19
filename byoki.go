@@ -28,10 +28,6 @@ type KeysFile struct {
 	PrivateKey string `json:"private_key"`
 }
 
-const (
-	TempDir = "./tmp"
-)
-
 var optionsGenerate struct {
 	Output  string `short:"o" long:"output" required:"yes" description:"Filename for the new key pair"`
 	Minimum int    `short:"m" long:"min" required:"yes" description:"Minimum of shares needed to retrieve the private key"`
