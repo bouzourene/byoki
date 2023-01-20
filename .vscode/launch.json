@@ -10,7 +10,7 @@
 			"request": "launch",
 			"mode": "debug",
 			"program": "${workspaceFolder}",
-			"args": ["genkeys", "-m", "3", "-t", "6", "-o", "./keys.json"]
+			"args": ["decrypt", "-a", "encrypted-1674211185609651000.byoki"]
 		}
 	]
 }

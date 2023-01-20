@@ -1,4 +1,4 @@
-module fhvi.ch/srsi/aster
+module github.com/bouzourene/byoki
 
 go 1.19
 
