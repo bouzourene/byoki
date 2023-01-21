@@ -26,7 +26,7 @@ func main() {
 
 		_, err := flags.ParseArgs(&helpers.OptionsGenerate, args)
 		if err != nil {
-			panic(err)
+			helpers.ErrorAndExit(err)
 		}
 
 		output := actions.GenerateKeys(
@@ -36,7 +36,7 @@ func main() {
 
 		err = helpers.WriteFileToDisk(helpers.OptionsGenerate.Output, output)
 		if err != nil {
-			panic(err)
+			helpers.ErrorAndExit(err)
 		}
 
 		outputPath := helpers.OptionsGenerate.Output
@@ -56,7 +56,7 @@ func main() {
 
 		_, err := flags.ParseArgs(&helpers.OptionsEncrypt, args)
 		if err != nil {
-			panic(err)
+			helpers.ErrorAndExit(err)
 		}
 
 		err = actions.Encrypt(
@@ -65,19 +65,19 @@ func main() {
 		)
 
 		if err != nil {
-			panic(err)
+			helpers.ErrorAndExit(err)
 		}
 
 	} else if action == "decrypt" {
 
 		_, err := flags.ParseArgs(&helpers.OptionsDecrypt, args)
 		if err != nil {
-			panic(err)
+			helpers.ErrorAndExit(err)
 		}
 
 		err = actions.Decrypt(helpers.OptionsDecrypt.Archive)
 		if err != nil {
-			panic(err)
+			helpers.ErrorAndExit(err)
 		}
 
 	} else {

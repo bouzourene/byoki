@@ -3,7 +3,6 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 func GenerateKeys(min int, total int) string {
 	shamirKey, err := helpers.GeneratePassphrase()
 	if err != nil {
-		log.Fatal(err) // TODO: Handle error
+		helpers.ErrorAndExit(err)
 	}
 
 	shares, err := shamir.Split([]byte(shamirKey), total, min)
@@ -32,7 +31,7 @@ func GenerateKeys(min int, total int) string {
 	)
 
 	if err != nil {
-		log.Fatal(err) // TODO: Handle error
+		helpers.ErrorAndExit(err)
 	}
 
 	privateKey, err = privateKey.Lock(
@@ -40,17 +39,17 @@ func GenerateKeys(min int, total int) string {
 	)
 
 	if err != nil {
-		log.Fatal(err) // TODO: Handle error
+		helpers.ErrorAndExit(err)
 	}
 
 	privateKeyArmor, err := privateKey.Armor()
 	if err != nil {
-		log.Fatal(err) // TODO: Handle error
+		helpers.ErrorAndExit(err)
 	}
 
 	publicKeyArmor, err := privateKey.GetArmoredPublicKey()
 	if err != nil {
-		log.Fatal(err) // TODO: Handle error
+		helpers.ErrorAndExit(err)
 	}
 
 	var keys []string
@@ -96,7 +95,7 @@ func GenerateKeys(min int, total int) string {
 	)
 
 	if err != nil {
-		panic(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	var file helpers.KeysFile
@@ -108,7 +107,7 @@ func GenerateKeys(min int, total int) string {
 
 	json, err := json.Marshal(file)
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	return string(json)

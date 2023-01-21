@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -63,35 +62,35 @@ func Encrypt(keyfile string, file string) error {
 	// Add a file to the zip file
 	f1, err := wr.Create("encrypted-file")
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	// Write data to the file
 	_, err = f1.Write([]byte(encryptedFile))
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	f2, err := wr.Create("filename")
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	// Write data to the file
 	_, err = f2.Write([]byte(filename))
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	f3, err := wr.Create("keyfile")
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	// Write data to the file
 	_, err = f3.Write([]byte(keyfileContent))
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	return nil

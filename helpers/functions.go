@@ -27,7 +27,7 @@ func GeneratePassphrase() (string, error) {
 }
 
 func WriteFileToDisk(path string, content string) error {
-	return os.WriteFile(path, []byte(content), 0777)
+	return WriteBinaryFileToDisk(path, []byte(content))
 }
 
 func WriteBinaryFileToDisk(path string, content []byte) error {
@@ -52,30 +52,18 @@ func WaitForEnter() {
 
 func ReadAll(file *zip.File) []byte {
 	fc, err := file.Open()
-	Check(err)
-	defer CloseFile(fc)
+	if err != nil {
+		ErrorAndExit(err)
+	}
+
+	defer fc.Close()
 
 	content, err := ioutil.ReadAll(fc)
-	Check(err)
+	if err != nil {
+		ErrorAndExit(err)
+	}
 
 	return content
-}
-
-func Check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-type MyCloser interface {
-	Close() error
-}
-
-// closeFile is a helper function which streamlines closing
-// with error checking on different file types.
-func CloseFile(f MyCloser) {
-	err := f.Close()
-	Check(err)
 }
 
 func EncryptMessage(key []byte, message string) (string, error) {
@@ -119,4 +107,9 @@ func DecryptMessage(key []byte, message string) (string, error) {
 	stream.XORKeyStream(cipherText, cipherText)
 
 	return string(cipherText), nil
+}
+
+func ErrorAndExit(err error) {
+	fmt.Printf("[Fatal error] %s", err.Error())
+	os.Exit(1)
 }

@@ -34,12 +34,10 @@ func Decrypt(archive string) error {
 		} else if f.Name == "keyfile" {
 			err = json.Unmarshal(helpers.ReadAll(f), &jsonData)
 			if err != nil {
-				panic(err)
+				helpers.ErrorAndExit(err)
 			}
 		} else if f.Name == "encrypted-file" {
 			filedata = helpers.ReadAll(f)
-		} else {
-			panic("test")
 		}
 	}
 
@@ -73,7 +71,6 @@ func Decrypt(archive string) error {
 		fmt.Fprintf(os.Stderr, "Failed to combine secret: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("%s\n", string(shamirKey))
 
 	pkey, err := helpers.DecryptMessage(
 		shamirKey,
@@ -81,7 +78,7 @@ func Decrypt(archive string) error {
 	)
 
 	if err != nil {
-		panic(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	fileDecrypted, err := helper.DecryptBinaryMessageArmored(
@@ -91,7 +88,7 @@ func Decrypt(archive string) error {
 	)
 
 	if err != nil {
-		panic(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	err = helpers.WriteBinaryFileToDisk(
@@ -100,7 +97,7 @@ func Decrypt(archive string) error {
 	)
 
 	if err != nil {
-		panic(err)
+		helpers.ErrorAndExit(err)
 	}
 
 	return nil
