@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/bouzourene/byoki/helpers"
-	"github.com/corvus-ch/shamir"
+	"github.com/hashicorp/vault/shamir"
 )
 
 func GenerateKeys(min int, total int) string {
@@ -17,14 +18,10 @@ func GenerateKeys(min int, total int) string {
 		log.Fatal(err) // TODO: Handle error
 	}
 
-	shares, err := shamir.Split(
-		[]byte(shamirKey),
-		total,
-		min,
-	)
-
+	shares, err := shamir.Split([]byte(shamirKey), total, min)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Failed to split secret: %v\n", err)
+		os.Exit(1)
 	}
 
 	privateKey, err := crypto.GenerateKey(
@@ -57,19 +54,8 @@ func GenerateKeys(min int, total int) string {
 	}
 
 	var keys []string
-	for index, key := range shares {
-		var key2 string
-		keyHexa := fmt.Sprintf("%x", key)
-
-		for j, keyPart := range keyHexa {
-			if j > 0 && j%4 == 0 {
-				key2 += "-"
-			}
-			key2 = fmt.Sprintf("%s%c", key2, keyPart)
-		}
-
-		key2 = fmt.Sprintf("%x-%s", index, key2)
-		keys = append(keys, key2)
+	for _, key := range shares {
+		keys = append(keys, fmt.Sprintf("%x", key))
 	}
 
 	helpers.ScreenClear()
@@ -104,13 +90,21 @@ func GenerateKeys(min int, total int) string {
 		helpers.ScreenClear()
 	}
 
+	encrypted, err := helpers.EncryptMessage(
+		[]byte(shamirKey),
+		privateKeyArmor,
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
 	var file helpers.KeysFile
 	file.CreatedOn = time.Now().Format("2006-01-02 15:04:05")
 	file.Minimum = min
 	file.Total = total
 	file.PublicKey = publicKeyArmor
-	//file.PrivateKey = privateKey
-	file.PrivateKey = privateKeyArmor
+	file.PrivateKey = encrypted
 
 	json, err := json.Marshal(file)
 	if err != nil {

@@ -5,13 +5,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
-	"strings"
 
 	"github.com/ProtonMail/gopenpgp/v2/helper"
 	"github.com/bouzourene/byoki/helpers"
-	"github.com/corvus-ch/shamir"
+	"github.com/hashicorp/vault/shamir"
 )
 
 func Decrypt(archive string) error {
@@ -38,8 +36,10 @@ func Decrypt(archive string) error {
 			if err != nil {
 				panic(err)
 			}
-		} else {
+		} else if f.Name == "encrypted-file" {
 			filedata = helpers.ReadAll(f)
+		} else {
+			panic("test")
 		}
 	}
 
@@ -50,90 +50,43 @@ func Decrypt(archive string) error {
 	)
 
 	var keys []string
-
-	/*for i := 1; i <= jsonData.Minimum; i++ {
+	for i := 1; i <= jsonData.Minimum; i++ {
 		fmt.Printf("Enter secret share number %d: ", i)
 
 		var key string
 		fmt.Scanln(&key)
 
 		keys = append(keys, key)
-	}*/
-	keys = append(keys, "45-b08c-3b4a-8bbe-b057-7f61-3124-ab44-522a-7e11-afdb-38d5-67db-c386-6d93-658d-117c")
-	keys = append(keys, "25-f19f-85c3-6077-3615-3d98-6e5c-ea73-4290-bc5f-29cd-50fd-760e-5857-4299-3b48-ae84")
+	}
 
-	byteParts := make(map[byte][]byte)
-	for _, key := range keys {
-		index := strings.Split(key, "-")[0]
-		key = key[len(index):]
-
-		key = strings.ReplaceAll(key, "-", "")
-		fmt.Println(key)
-		bytePart, err := hex.DecodeString(key)
+	var byteParts [][]byte
+	for _, hexPart := range keys {
+		b, err := hex.DecodeString(hexPart)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Fprintf(os.Stderr, "Failed to decode %q: %v\n", hexPart, err)
+			os.Exit(1)
 		}
-
-		byteIndex := []byte(index)
-		byteParts[byteIndex[0]] = bytePart
+		byteParts = append(byteParts, b)
 	}
-	shamirKey2, err := shamir.Combine(byteParts)
+	shamirKey, err := shamir.Combine(byteParts)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to combine secret: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("%s\n", string(shamirKey))
+
+	pkey, err := helpers.DecryptMessage(
+		shamirKey,
+		jsonData.PrivateKey,
+	)
+
 	if err != nil {
 		panic(err)
 	}
-
-	/*byteParts := make(map[byte][]byte)
-	for i, key := range shares {
-		key = strings.ReplaceAll(key, "-", "")
-		fmt.Println(key)
-		bytePart, err := hex.DecodeString(key)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		byteParts[byte(i)] = bytePart
-	}
-
-	secret, err := shamir.Combine(byteParts)
-	if err != nil {
-		panic(err)
-	}
-
-	if err != nil {
-		panic(err)
-	}*/
-
-	/*privateKey, err := crypto.NewKeyFromArmored(jsonData.PrivateKey)
-	if err != nil {
-		panic(err)
-	}*/
-
-	/*privateKey, err := crypto.NewKeyFromArmored(jsonData.PrivateKey)
-	if err != nil {
-		panic(err)
-	}
-
-	privateKeyUnlocked, err := privateKey.Unlock(shamirKey2)
-	if err != nil {
-		panic(err)
-	}
-
-	pkey, err := privateKeyUnlocked.Armor()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(pkey)
-
-	fileDecrypted, err := helper.DecryptAttachmentWithKey(
-		pkey,
-		shamirKey2,
-		filedata,
-		filedata,
-	)*/
 
 	fileDecrypted, err := helper.DecryptBinaryMessageArmored(
-		jsonData.PrivateKey,
-		shamirKey2,
+		pkey,
+		shamirKey,
 		string(filedata),
 	)
 

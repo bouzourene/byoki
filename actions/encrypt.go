@@ -28,7 +28,7 @@ func Encrypt(keyfile string, file string) error {
 		return err
 	}
 
-	fileContent, err := os.ReadFile(keyfile)
+	fileContent, err := os.ReadFile(file)
 	if err != nil {
 		return err
 	}
