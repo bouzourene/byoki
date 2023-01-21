@@ -24,8 +24,8 @@ That's when Shamir Split Secrets become useful, it allows us to choose a total n
 ```
 
 ## TODO
+- Better error handling
 - Clean up / reformat some code
 - Add comments
 - Create release
 - Automate releases with github actions?
-- Mirror this repo on my own server (just in case)
