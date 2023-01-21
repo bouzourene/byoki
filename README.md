@@ -1,7 +1,7 @@
 # Byoki
 Byoki is a CLI tool that combines PGP asymetric encryotion with the concept of Shamir Split Secrets for decryption.
 
-## Examplese usecase
+## Example usecase
 I need to make automated and encrypted backups for a database (could be anything, really), but I need to make sure that only one person is not enough to decrypt it.
 That's when Shamir Split Secrets become useful, it allows us to choose a total number of secret keys and a threshold for decrption. Each trusted user is given a personnal key, they will have to be together in order to unlock the archive.
 
