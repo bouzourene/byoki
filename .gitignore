@@ -3,3 +3,4 @@ test/*
 *.byoki
 byoki
 byoki.exe
+build/*
