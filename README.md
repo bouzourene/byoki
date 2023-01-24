@@ -22,7 +22,3 @@ That's when Shamir Split Secrets becomes useful, it allows us to choose a total 
 ```
 ./byoki decrypt -a [path to the encrypted archive, ex: archive-xyz.byoki]
 ```
-
-## TODO
-- Create release
-- Automate releases with github actions?
